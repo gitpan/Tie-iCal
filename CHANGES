@@ -1,0 +1,14 @@
+CHANGES
+
+0.10 -> 0.11
+added modified parse_line to ignore single quotes.
+remove dependency on Text::ParseWords.
+added b_tie.t test.
+fixed UID bug on STORE method.
+fixed typo in subcomponent creation.
+added c_storefetch.t test.
+fold lines over 75 characters.
+
+0.09 -> 0.10
+support multiple content lines with/without params.
+FETCH, EXISTS, DELETE all use seekUid.
