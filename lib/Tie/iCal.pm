@@ -4,7 +4,7 @@
 #
 # 18 Jan 2005 by Blair Sutton <bsdz@cpan.org>
 #
-# Version: 0.11 (18th January 2005)
+# Version: 0.12 (27th January 2005)
 #
 # Copyright (c) 2005 Blair Sutton. All rights reserved.
 # This program is free software; you can redistribute it and/or
@@ -16,14 +16,14 @@ package Tie::iCal;
 
 use strict;
 require Exporter;
-our $VERSION = 0.11;
+our $VERSION = 0.12;
 our @ISA     = qw(Exporter);
 
 use Tie::File;
 
 =head1 NAME
 
-Tie::iCal - tie iCal fils to Perl hashes.
+Tie::iCal - Tie iCal files to Perl hashes.
 
 =head1 SYNOPSIS
 
@@ -65,7 +65,8 @@ Tie::iCal - tie iCal fils to Perl hashes.
 
 Tie::iCal represents an RFC2445 iCalendar file as a Perl hash. Each key in the hash represents
 an iCalendar component like VEVENT, VTODO or VJOURNAL. Each component in the file must have
-a unique UID property as specified in the RFC 2445.
+a unique UID property as specified in the RFC 2445. A file containing non-unique UIDs can
+be converted to have only unique UIDs (see samples/uniquify.pl).
 
 The module makes very little effort in understanding what each iCalendar property means and concentrates
 on the format of the iCalendar file only.
@@ -86,7 +87,7 @@ sub TIEHASH {
 	
 	tie my @a, 'Tie::File', $f, recsep => "\r\n" or die "failed to open ical file\n";
 	$O{A} = \@a; # file array
-	$O{i} = 0;   # current file index
+	$O{i} = 0;   # current file index for FIRSTKEY and NEXTKEY
 	$O{C} = ();  # uid to index cache
 	
 	bless \%O => $p;
@@ -227,15 +228,17 @@ sub seekUid {
 	my $self = shift;
 	my $uid  = shift;
 	
+	my $index;
+	
 	# check cache
 	#
 	if (exists $self->{C}->{$uid}) {
 		$self->debug("found cached index for $uid, checking..");
-		$self->{i} = $self->{C}->{$uid};
-		if ($self->unfold($self->{i}) =~ /^UID.*:(.*)$/) {
+		$index = $self->{C}->{$uid};
+		if ($self->unfold($index) =~ /^UID.*:(.*)$/) {
 			if ($1 eq $uid) {
 				$self->debug("found key $uid in cache");
-				return $self->{i};
+				return $index;
 			} else {
 				$self->debug("could not find key $uid in cache, deleting");
 				delete $self->{C}->{$uid};
@@ -247,20 +250,20 @@ sub seekUid {
 	
 	# not in cache then lets search the file
 	#
-	$self->{i} = 0;
+	$index = 0;
 	for my $line (@{$self->{A}}) {
 		if ($line =~ m/^UID/) {
-			if ($self->unfold($self->{i}) =~ /^UID.*:(.*)$/) {
-				$self->{C}->{$1} = $self->{i}; # cache in any case
+			if ($self->unfold($index) =~ /^UID.*:(.*)$/) {
+				$self->{C}->{$1} = $index; # cache in any case
 				if ($1 eq $uid) {
 					$self->debug("found key $uid");
-					return $self->{i};
+					return $index;
 				}
 			} else {
 				warn("discovered illegal UID property format, should be like UID;...:..., ignoring for now\n");
 			}
 		}
-		$self->{i}++;
+		$index++;
 	}
 	
 	# doesn't exist!
@@ -299,6 +302,40 @@ An iCal component such as VEVENT, VTODO or VJOURNAL maps to a hash key:-
 corresponds to
 
 	$events{'a_unique_uid'} = ['VEVENT', {'NAME1' => 'VALUE1'}]
+
+=head2 Subcomponents
+
+An iCal subcomponent such as VALARM maps to a list of hash keys:-
+
+	BEGIN:VALARM
+	TRIGGER;VALUE=DURATION:-PT1S
+	TRIGGER;VALUE=DURATION:-PT1S
+	END:VALARM
+	BEGIN:VALARM
+	X-TIE-ICAL;VALUE=ANOTHER:HERE
+	X-TIE-ICAL:HERE2
+	X-TIE-ICAL-NAME:HERE2
+	END:VALARM
+
+corresponds to
+
+	'VALARM' => [
+		{
+			'TRIGGER' => [
+				[{'VALUE' => 'DURATION'},'-PT1S'],
+				[{'VALUE' => 'DURATION'},'-PT1S']
+			]
+		},
+		{
+			'X-TIE-ICAL' => [
+				[{'VALUE' => 'ANOTHER'},'HERE'],
+				['HERE2']
+			],
+			'X-TIE-ICAL-NAME' => 'HERE2'
+		}
+	]
+
+To see how individual content lines are formed see below.
 
 =head2 Content Lines
 

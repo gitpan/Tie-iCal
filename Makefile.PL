@@ -8,13 +8,14 @@ WriteMakefile(
 	'PM' => {
 		'lib/Tie/iCal.pm' => '$(INST_LIBDIR)/iCal.pm',
 	},
-	PREREQ_PM   => {
+	'PL_FILES' => {},
+	'PREREQ_PM'   => {
 		'Tie::File'	=> '0.97',
 	},
 	($] ge '5.005') ?
 	(
 		'AUTHOR'   => 'Blair Sutton (bsdz@cpan.org)',
-		'ABSTRACT' => 'Tie iCal fils to Perl hashes',
+		'ABSTRACT' => 'Tie iCal files to Perl hashes',
 	)
 	: (),
 );

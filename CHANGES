@@ -1,5 +1,11 @@
 CHANGES
 
+0.11 -> 0.12
+fixed typo in Makefile.PL ASTRACT.
+fixed exists reset key interator bug in seekUid.
+added uniquify.pl example.
+Added more documentation.
+
 0.10 -> 0.11
 added modified parse_line to ignore single quotes.
 remove dependency on Text::ParseWords.
