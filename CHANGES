@@ -1,10 +1,15 @@
 CHANGES
 
+0.12 -> 0.13
+corrected unfold behaviour with "\n" character sequences.
+corrected property extraction with "\n" character sequences.
+added more documentation.
+
 0.11 -> 0.12
 fixed typo in Makefile.PL ASTRACT.
 fixed exists reset key interator bug in seekUid.
 added uniquify.pl example.
-Added more documentation.
+added more documentation.
 
 0.10 -> 0.11
 added modified parse_line to ignore single quotes.

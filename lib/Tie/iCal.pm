@@ -1,22 +1,8 @@
-###############################################################################
-#
-# Tie::iCal
-#
-# 18 Jan 2005 by Blair Sutton <bsdz@cpan.org>
-#
-# Version: 0.12 (27th January 2005)
-#
-# Copyright (c) 2005 Blair Sutton. All rights reserved.
-# This program is free software; you can redistribute it and/or
-# modify it under the same terms as Perl itself.
-#
-###############################################################################
-
 package Tie::iCal;
 
 use strict;
 require Exporter;
-our $VERSION = 0.12;
+our $VERSION = 0.13;
 our @ISA     = qw(Exporter);
 
 use Tie::File;
@@ -24,6 +10,10 @@ use Tie::File;
 =head1 NAME
 
 Tie::iCal - Tie iCal files to Perl hashes.
+
+=head1 VERSION
+
+This document describes version 0.13 released 29th January 2005.
 
 =head1 SYNOPSIS
 
@@ -79,6 +69,12 @@ This may be useful for file locking.
 
 	my $ical = tie %events, 'Tie::iCal', "mycalendar.ics";
 	$ical->{A}->flock;
+
+=head1 DATES
+
+The iCalendar specification uses a special format for dates. This module makes no effort in trying
+to interpret dates in this format. You should look at the Date::ICal module that can convert between
+Unix epoch dates and iCalendar date strings.
 
 =cut
 
@@ -216,7 +212,7 @@ sub unfold {
 	
 	my $result = ${$self->{A}}[$index];
 	my $i = 1;
-	until (${$self->{A}}[$index + $i] !~ /^ (.*)$/) {
+	until (${$self->{A}}[$index + $i] !~ /^ (.*)$/s) {
 		$result .= $1;
 		$i++;
 	}
@@ -520,7 +516,7 @@ sub toHash {
 			} elsif ($contentLine =~ /^BEGIN:(\w+)$/) { # we have found a subcomponent
 				$subComponent = $1;
 				push @{$e{$subComponent}}, $self->toHash($i, 1);
-			} elsif ($contentLine =~ /^[\w-]+;.*$/) { # we have params
+			} elsif ($contentLine =~ /^[\w-]+;.*$/s) { # we have params
 				my ($nameAndParamString, @valueFragments) = &parse_line(':', $contentLine);
 				my @values = &parse_line(',', join(':', @valueFragments));
 				my ($name, @params) = &parse_line(';', $nameAndParamString);
@@ -535,7 +531,7 @@ sub toHash {
                 } else {
                     $e{$name} = [{%params}, @values];
                 }
-			} elsif ($contentLine =~ /^[\w-]+:.*$/) { # we don't have params
+			} elsif ($contentLine =~ /^[\w-]+:.*$/s) { # we don't have params
 				my ($name, @valueFragments) = &parse_line(':', $contentLine);
 				my @values;
 				if ($name eq 'RRULE') {
@@ -578,6 +574,19 @@ Property names that begin with UID can potentially confuse this module.
 Subcomponents such as VALARM must exist after any UID property.
 
 Deleting events individually may leave non-RFC2445 compliant empty VCALENDAR objects.
+
+=head1 AUTHOR
+
+Blair Sutton, <mailto:bsdz@cpan.org>, L<http://www.numeninest.com/>
+
+=head1 COPYRIGHT
+
+Copyright (c) 2005 Blair Sutton. All rights reserved.
+This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
+
+=head1 SEE ALSO
+
+L<perl>, L<Tie::File>, L<Date::ICal>
 
 =cut
 
