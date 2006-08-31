@@ -2,7 +2,7 @@ package Tie::iCal;
 
 use strict;
 require Exporter;
-our $VERSION = 0.13;
+our $VERSION = 0.14;
 our @ISA     = qw(Exporter);
 
 use Tie::File;
@@ -13,7 +13,7 @@ Tie::iCal - Tie iCal files to Perl hashes.
 
 =head1 VERSION
 
-This document describes version 0.13 released 29th January 2005.
+This document describes version 0.14 released 1st September 2006.
 
 =head1 SYNOPSIS
 
@@ -112,12 +112,12 @@ sub FIRSTKEY {
 	
 	$self->{i} = 0;
 	for my $line (@{$self->{A}}) {
-		if ($line =~ m/^UID/) {
+		if (substr($line, 0, 3) eq 'UID') {
 			if ($self->unfold($self->{i}) =~ /^UID.*:(.*)$/) {
 				$self->{C}->{$1} = $self->{i}; # cache in any case
 				return $1;
 			} else {
-				warn("FISRTKEY: discovered illegal UID property format, should be like UID;...:..., ignoring for now\n");
+				warn("FIRSTKEY: discovered illegal UID property format, should be like UID;...:..., ignoring for now\n");
 			}
 		}
 		$self->{i}++;
@@ -132,7 +132,7 @@ sub NEXTKEY {
 	my $i = $self->{i};
 	$self->{i} = 0;
 	for my $line (@{$self->{A}}) {
-		if ($line =~ m/^UID/ && $self->{i} > $i) {
+		if ($self->{i} > $i && substr($line, 0, 3) eq 'UID') {
 			if ($self->unfold($self->{i}) =~ /^UID.*:(.*)$/) {
 				$self->{C}->{$1} = $self->{i}; # cache in any case
 				return $1;
@@ -150,7 +150,7 @@ sub SCALAR {
 	
 	my $count = 0;
 	for my $line (@{$self->{A}}) {
-		$count++ if $line =~ m/^UID/;
+		$count++ if substr($line, 0, 3) eq 'UID';
 	}
 	return $count;
 }
@@ -248,7 +248,7 @@ sub seekUid {
 	#
 	$index = 0;
 	for my $line (@{$self->{A}}) {
-		if ($line =~ m/^UID/) {
+		if (substr($line, 0, 3) eq 'UID') {
 			if ($self->unfold($index) =~ /^UID.*:(.*)$/) {
 				$self->{C}->{$1} = $index; # cache in any case
 				if ($1 eq $uid) {
@@ -358,6 +358,14 @@ or
 having an equivalent perl data structure like: -
 
     'NAME' => 'VALUE'
+
+An blank value is mapped from
+
+	NAME:
+
+to 
+
+	'NAME' => ''
 
 Multiple contentlines with same name, i.e. FREEBUSY, ATTENDEE:-
 
@@ -549,7 +557,13 @@ sub toHash {
                         push @{$e{$name}}, [@values];
                     }
                 } else {
-                    $e{$name} = @values == 1 ? $values[0] : [@values];
+					if (@values == 0) {
+                    	$e{$name} = "";
+					} elsif (@values == 1)  {
+						$e{$name} = $values[0];
+					} else {
+						$e{$name} = [@values];
+					}
                 }
 			} else { # what do we have?
 				warn("discovered illegal property format, should be like NAME;...:..., ignoring for now\n");
@@ -581,7 +595,7 @@ Blair Sutton, <mailto:bsdz@cpan.org>, L<http://www.numeninest.com/>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2005 Blair Sutton. All rights reserved.
+Copyright (c) 2006 Blair Sutton. All rights reserved.
 This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO

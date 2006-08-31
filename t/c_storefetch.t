@@ -13,7 +13,7 @@ use Tie::iCal;
 ok(tie my %events1, 'Tie::iCal', "test1.ics", 'debug' => 0);
 ok(tie my %events2, 'Tie::iCal', "test2.ics", 'debug' => 0);
 
-ok(scalar(%events1) == 46);
+ok(scalar(keys %events1) == 46);
 
 while (my ($key, $value) = each %events1) {
     $events2{$key} = $value;

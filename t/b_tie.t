@@ -35,7 +35,7 @@ while (my ($key, $value) = each %events) { $count++; }
 ok($count == 45);
 
 # COUNT
-ok(scalar(%events) == 46);
+ok(scalar(keys %events) == 46);
 
 # DELETE
 delete $events{'1ce81410-4769-11d9-8693-ee0b0a9128b1'};

@@ -1,5 +1,10 @@
 CHANGES
 
+0.13 -> 0.14
+some optimisations, i.e. substr instead of m//
+"NAME:" becomes "NAME => ''"
+added outlook sync sample
+
 0.12 -> 0.13
 corrected unfold behaviour with "\n" character sequences.
 corrected property extraction with "\n" character sequences.
