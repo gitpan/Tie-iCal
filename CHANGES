@@ -1,5 +1,9 @@
 CHANGES
 
+0.14 -> 0.15
+added NEXTKEY performance patch by BenRifkah Bergsten-Buret.
+added bug fix by Krishna Sethuraman.
+
 0.13 -> 0.14
 some optimisations, i.e. substr instead of m//
 "NAME:" becomes "NAME => ''"

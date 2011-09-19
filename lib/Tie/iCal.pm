@@ -2,7 +2,7 @@ package Tie::iCal;
 
 use strict;
 require Exporter;
-our $VERSION = 0.14;
+our $VERSION = 0.15;
 our @ISA     = qw(Exporter);
 
 use Tie::File;
@@ -124,15 +124,13 @@ sub FIRSTKEY {
 	}
 }
 
-# copy of FIRSTKEY but with extra condition $self->{i} > last index
-#
 sub NEXTKEY {
 	my $self = shift;
 	
-	my $i = $self->{i};
-	$self->{i} = 0;
-	for my $line (@{$self->{A}}) {
-		if ($self->{i} > $i && substr($line, 0, 3) eq 'UID') {
+ 	# start search one line after the current point
+ 	my $start_idx = ++$self->{i};
+ 	for my $line (@{$self->{A}}[$start_idx .. (@{$self->{A}} - 1)]) {
+ 		if ($line =~ m/^UID/) {
 			if ($self->unfold($self->{i}) =~ /^UID.*:(.*)$/) {
 				$self->{C}->{$1} = $self->{i}; # cache in any case
 				return $1;
@@ -550,7 +548,7 @@ sub toHash {
 					@values = &parse_line(',', join(':', @valueFragments));
 				}
 				if (exists $e{$name}) {
-                    if (!(@{$e{$name}} && !grep({ref($_) ne 'ARRAY'} @{$e{$name}}))) { # not a strict list of arrays
+                    if (!(ref($e{$name}) eq 'ARRAY' && @{$e{$name}} && !grep({ref($_) ne 'ARRAY'} @{$e{$name}}))) { # not a strict list of arrays
                         $self->debug("found singleton data, converting to list..");
                         $e{$name} = [$e{$name}, [@values]];
                     } else {
